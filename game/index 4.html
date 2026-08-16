@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Space Blaster 199X - Modern Arcade</title>
+  <meta name="description" content="Retro neon 2D space shooter arcade game built with HTML5 Canvas, Web Audio API, and custom particle engines.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+  <div id="game-wrapper">
+    <!-- Retro Scanlines Effect -->
+    <div class="scanlines"></div>
+
+    <!-- HTML Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Top HUD Interface -->
+    <div id="hud">
+      <!-- Player 1 HUD -->
+      <div id="p1HudGroup" class="hud-group">
+        <div class="hud-item">
+          <span class="hud-label">P1 SCORE</span>
+          <span id="scoreDisplay" class="hud-value">0</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">LIVES</span>
+          <span id="livesDisplay" class="hud-value">3</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">SHIELD</span>
+          <span id="shieldDisplay" class="badge shield-off">OFF</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">WPN</span>
+          <span id="weaponDisplay" class="hud-value">LV.1</span>
+        </div>
+        <span id="specialDisplay" class="badge" style="display:none;"></span>
+      </div>
+
+      <!-- Center HUD -->
+      <div class="hud-group">
+        <div class="hud-item">
+          <span class="hud-label">BEST</span>
+          <span id="highScoreDisplay" class="hud-value gold">0</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">WAVE</span>
+          <span id="waveDisplay" class="hud-value pink">1</span>
+        </div>
+        <button id="soundBtn" class="hud-btn">[ 🔊 SOUND ]</button>
+        <button id="pauseBtn" class="hud-btn">[ || PAUSE ]</button>
+      </div>
+
+      <!-- Player 2 HUD (Visible in 2-Player Co-op mode) -->
+      <div id="p2HudGroup" class="hud-group" style="display:none;">
+        <div class="hud-item">
+          <span class="hud-label">P2 SCORE</span>
+          <span id="p2ScoreDisplay" class="hud-value gold">0</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">LIVES</span>
+          <span id="p2LivesDisplay" class="hud-value gold">3</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">SHIELD</span>
+          <span id="p2ShieldDisplay" class="badge shield-off">OFF</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">WPN</span>
+          <span id="p2WeaponDisplay" class="hud-value gold">LV.1</span>
+        </div>
+        <span id="p2SpecialDisplay" class="badge" style="display:none;"></span>
+      </div>
+    </div>
+
+    <!-- Mode Selection Screen (Start Menu Step 1) -->
+    <div id="modeSelectScreen" class="modal-screen">
+      <div class="title-container">
+        <h1 class="main-title">SPACE BLASTER 199X</h1>
+        <div class="sub-title">RETRO ARCADE REBUILT</div>
+      </div>
+
+      <!-- Player Count Selection Toggle -->
+      <div class="players-toggle-group">
+        <button id="btnPlayer1" class="btn-player active" data-players="1">[ 👤 1 PLAYER ]</button>
+        <button id="btnPlayer2" class="btn-player" data-players="2">[ 👥 2 PLAYERS CO-OP ]</button>
+      </div>
+
+      <div class="menu-options">
+        <button class="btn-option" data-mode="easy">[ EASY ]</button>
+        <button class="btn-option" data-mode="medium">[ MEDIUM ]</button>
+        <button class="btn-option" data-mode="hard">[ HARD ]</button>
+        <button class="btn-option goodnight" data-mode="goodnight">[ GOODNIGHT (INSANE) ]</button>
+      </div>
+    </div>
+
+    <!-- Ship Selection Screen (Dedicated Hangar Page Step 2) -->
+    <div id="shipSelectScreen" class="modal-screen hidden">
+      <div class="title-container">
+        <h1 class="main-title" style="background: linear-gradient(135deg, #00f0ff, #00ff88); -webkit-background-clip: text; background-clip: text;">SELECT YOUR SPACESHIP</h1>
+        <div class="sub-title">เลือกยานพาหนะเข้าสู่สงครามเวหา</div>
+      </div>
+
+      <!-- Player Selector Tabs (For 2P Co-Op mode) -->
+      <div id="playerTabGroup" class="players-toggle-group" style="display:none; margin-bottom: 12px; max-width: 440px;">
+        <button id="tabP1" class="btn-player active">[ 🚀 PLAYER 1 ]</button>
+        <button id="tabP2" class="btn-player">[ 🛸 PLAYER 2 ]</button>
+      </div>
+      <div id="pSelectNotice" class="high-score-banner" style="margin-bottom: 14px; font-weight: bold; color: var(--neon-cyan);">
+        SELECTING FOR PLAYER 1
+      </div>
+
+      <!-- 3 Ship Preview Cards Grid -->
+      <div class="ship-cards-grid">
+        <!-- Card 0: Cyber Interceptor -->
+        <div class="ship-card active" data-ship="0">
+          <div class="ship-card-header">CYBER INTERCEPTOR</div>
+          <div class="ship-canvas-wrapper">
+            <canvas id="shipPreview0" width="80" height="80"></canvas>
+          </div>
+          <div class="ship-stats">
+            <div class="stat-row"><span>SPEED</span><span class="stat-bar cyan">★★★</span></div>
+            <div class="stat-row"><span>POWER</span><span class="stat-bar gold">★★☆</span></div>
+          </div>
+          <div class="ship-desc">ยานสปีดว่องไว หลบหลีกง่าย เลเซอร์สมดุล</div>
+        </div>
+
+        <!-- Card 1: Plasma Striker -->
+        <div class="ship-card" data-ship="1">
+          <div class="ship-card-header">PLASMA STRIKER</div>
+          <div class="ship-canvas-wrapper">
+            <canvas id="shipPreview1" width="80" height="80"></canvas>
+          </div>
+          <div class="ship-stats">
+            <div class="stat-row"><span>SPEED</span><span class="stat-bar cyan">★★☆</span></div>
+            <div class="stat-row"><span>POWER</span><span class="stat-bar gold">★★★</span></div>
+          </div>
+          <div class="ship-desc">ยานเกราะเดลต้า ปืนพลาสม่าจู่โจมยิงหนัก</div>
+        </div>
+
+        <!-- Card 2: Void Phantom -->
+        <div class="ship-card" data-ship="2">
+          <div class="ship-card-header">VOID PHANTOM</div>
+          <div class="ship-canvas-wrapper">
+            <canvas id="shipPreview2" width="80" height="80"></canvas>
+          </div>
+          <div class="ship-stats">
+            <div class="stat-row"><span>SPEED</span><span class="stat-bar cyan">★★☆</span></div>
+            <div class="stat-row"><span>SHIELD</span><span class="stat-bar green">★★★</span></div>
+          </div>
+          <div class="ship-desc">ยานวอยด์ห้วงมิติ พลังป้องกันสูง คริสตัลพลังงาน</div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display:flex; gap: 14px; margin-top: 18px; width: 100%; max-width: 440px;">
+        <button id="shipBackBtn" class="btn-option" style="flex: 1; padding: 12px; font-size: 13px;">[ ⬅ ย้อนกลับ ]</button>
+        <button id="startGameBtn" class="btn-option goodnight" style="flex: 2; padding: 12px; font-size: 14px;">[ 🚀 เริ่มเกมเลย! ]</button>
+      </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameoverScreen" class="modal-screen hidden">
+      <div class="title-container">
+        <h1 class="main-title" style="background: linear-gradient(135deg, #ff0055, #ff6600); -webkit-background-clip: text; background-clip: text;">GAME OVER</h1>
+        <div class="sub-title">มนุษยชาติสิ้นหวังแล้ว...</div>
+      </div>
+
+      <div id="highscoreNotice" class="high-score-banner" style="display:none;">🎉 NEW HIGH SCORE RECORD!</div>
+
+      <div id="finalScoreContainer" style="display:flex; gap: 30px; margin-bottom: 25px; justify-content: center;">
+        <div class="hud-item" style="text-align: center;">
+          <span class="hud-label">P1 SCORE</span>
+          <span id="finalScore" class="hud-value" style="font-size: 32px;">0</span>
+        </div>
+        <div id="p2FinalScoreBox" class="hud-item" style="text-align: center; display:none;">
+          <span class="hud-label">P2 SCORE</span>
+          <span id="p2FinalScore" class="hud-value gold" style="font-size: 32px;">0</span>
+        </div>
+      </div>
+
+      <button id="restartBtn" class="btn-option" style="max-width: 260px;">[ ▶ กลับหน้าหลัก ]</button>
+    </div>
+
+    <!-- Pause Screen Modal -->
+    <div id="pauseScreen" class="modal-screen hidden">
+      <div class="title-container">
+        <h1 class="main-title" style="background: linear-gradient(135deg, #00f0ff, #ffaa00); -webkit-background-clip: text; background-clip: text;">GAME PAUSED</h1>
+        <div class="sub-title">หยุดเกมชั่วคราว</div>
+      </div>
+
+      <div class="menu-options" style="width: 100%; max-width: 320px; gap: 14px;">
+        <button id="resumeBtn" class="btn-option">[ ▶ 1. เล่นต่อ ]</button>
+        <button id="restartGameBtn" class="btn-option">[ 🔄 2. เริ่มใหม่ ]</button>
+        <button id="mainMenuBtn" class="btn-option goodnight" style="border-color: #ff0055;">[ 🏠 3. กลับหน้าหลัก ]</button>
+      </div>
+    </div>
+
+    <!-- Mobile Touch Controls Overlay -->
+    <div id="touch-controls">
+      <div id="touchDpad" class="touch-dpad"></div>
+      <div class="touch-btn-group">
+        <button id="touchSpecial" class="touch-btn special">SPECIAL</button>
+      </div>
+    </div>
+
+    <!-- Desktop Controls Hint -->
+    <div id="controlsHint" class="controls-bar">
+      [ WASD / ⬆⬇⬅➡ ] เคลื่อนที่  |  [ AUTO-FIRE ]  |  [ SPACE ] อาวุธพิเศษ  |  [ P ] หยุดเกม  |  [ M ] ปิด/เปิดเสียง
+    </div>
+  </div>
+</div>
+
+<script src="audio.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
